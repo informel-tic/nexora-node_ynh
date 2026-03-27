@@ -1,0 +1,78 @@
+#!/bin/bash
+source _common.sh
+ynh_abort_if_errors
+
+UNINSTALL_MODE="${NEXORA_UNINSTALL_MODE:-preserve}"
+REPORT_PATH="/var/log/nexora-uninstall-report.json"
+removed_paths=()
+preserved_paths=("$data_dir" "/tmp/nexora-export" "/var/log/yunohost-mcp-server")
+
+# Stop all scope-aware services
+nexora_stop_services
+
+# Remove systemd units
+ynh_config_remove_systemd
+# Also remove node-agent service if present
+agent_service="${app}-node-agent"
+if systemctl is-enabled "$agent_service" >/dev/null 2>&1; then
+    systemctl disable --now "$agent_service" || true
+    rm -f "/etc/systemd/system/${agent_service}.service"
+    systemctl daemon-reload || true
+fi
+
+ynh_config_remove_nginx
+
+if [ "$UNINSTALL_MODE" = "purge" ]; then
+    removed_paths+=("$install_dir" "$data_dir" "/tmp/nexora-export" "/var/log/yunohost-mcp-server")
+    preserved_paths=()
+
+    rm -rf "$install_dir" "$data_dir" /tmp/nexora-export /var/log/yunohost-mcp-server
+
+    # Also cleanup standalone bootstrap services if present.
+    for svc in nexora-control-plane nexora-node-agent; do
+        if systemctl list-unit-files | grep -q "^${svc}\.service"; then
+            systemctl disable --now "$svc" || true
+            rm -f "/etc/systemd/system/${svc}.service"
+        fi
+    done
+    systemctl daemon-reload || true
+fi
+
+python3 - <<'PY' "$REPORT_PATH" "$UNINSTALL_MODE" "${app}" "${removed_paths[*]:-}" "${preserved_paths[*]:-}" "${deployment_scope:-operator}" "${nexora_profile:-control-plane+node-agent}"
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+report_path = Path(sys.argv[1])
+mode = sys.argv[2]
+app = sys.argv[3]
+removed = [p for p in sys.argv[4].split() if p]
+preserved = [p for p in sys.argv[5].split() if p]
+scope = sys.argv[6]
+profile = sys.argv[7]
+
+payload = {
+    "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+    "application": app,
+    "mode": mode,
+    "deployment_scope": scope,
+    "nexora_profile": profile,
+    "purge_requested": mode == "purge",
+    "removed_paths": removed,
+    "preserved_paths": preserved,
+    "notes": [
+        "YunoHost core data is never deleted by Nexora uninstall hooks.",
+        "Use NEXORA_UNINSTALL_MODE=purge to remove Nexora application data.",
+    ],
+}
+report_path.parent.mkdir(parents=True, exist_ok=True)
+report_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+PY
+
+ynh_print_info "Nexora service removed (scope=${deployment_scope:-operator}). Uninstall report: $REPORT_PATH"
+if [ "$UNINSTALL_MODE" = "purge" ]; then
+    ynh_print_info "Nexora purge mode enabled: app data and logs removed."
+else
+    ynh_print_info "Nexora data preserved in $data_dir (set NEXORA_UNINSTALL_MODE=purge to remove)."
+fi

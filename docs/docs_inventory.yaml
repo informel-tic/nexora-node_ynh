@@ -1,0 +1,57 @@
+version: 1
+updated_at: 2026-03-27
+scope:
+  markdown_docs_count: 8
+  markdown_root: docs/
+documents:
+- path: docs/ARCHITECTURE.md
+  type: canonical
+  depends_on:
+  - docs/adr/README.md
+- path: docs/CHANGELOG.md
+  type: canonical
+  depends_on:
+  - docs/ROADMAP.md
+  - docs/CI_QUALITY_GATES.md
+- path: docs/CI_QUALITY_GATES.md
+  type: canonical
+  depends_on:
+  - .github/workflows/ci.yml
+  - .github/workflows/package-lint.yml
+  - tests/test_ci_guardrails.py
+  - tests/test_docs_inventory_contract.py
+- path: docs/DEPLOYMENT.md
+  type: canonical
+  depends_on:
+  - docs/RUNBOOKS.md
+- path: docs/ROADMAP.md
+  type: canonical
+  depends_on:
+  - docs/CHANGELOG.md
+- path: docs/RUNBOOKS.md
+  type: canonical
+  depends_on:
+  - docs/SECURITY.md
+  - docs/DEPLOYMENT.md
+- path: docs/SUBSCRIBER_GUIDE.md
+  type: canonical
+  depends_on:
+  - docs/DEPLOYMENT.md
+  - docs/SECURITY.md
+- path: docs/SECURITY.md
+  type: canonical
+  depends_on:
+  - docs/RUNBOOKS.md
+- path: docs/TECH_DEBT_REGISTER.md
+  type: canonical
+  depends_on:
+  - docs/ROADMAP.md
+  - docs/CHANGELOG.md
+- path: docs/adr/0002-ynh-package-is-distribution.md
+  type: canonical
+  depends_on:
+  - docs/DEPLOYMENT.md
+- path: docs/adr/README.md
+  type: canonical
+  depends_on:
+  - docs/adr/0002-ynh-package-is-distribution.md

@@ -1,0 +1,23 @@
+[Unit]
+Description=Nexora Node Agent
+After=network.target
+
+[Service]
+Type=simple
+User=__APP__
+WorkingDirectory=__INSTALL_DIR__
+Environment=NEXORA_STATE_PATH=__DATA_DIR__/state.json
+Environment=NEXORA_DEPLOYMENT_SCOPE=__DEPLOYMENT_SCOPE__
+Environment=NEXORA_PROFILE=__NEXORA_PROFILE__
+Environment=NEXORA_ENROLLMENT_MODE=__ENROLLMENT_MODE__
+Environment=NEXORA_SAAS_OPERATOR_URL=__SAAS_OPERATOR_URL__
+ExecStart=__INSTALL_DIR__/venv/bin/nexora-node-agent
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=__DATA_DIR__ /tmp/nexora-export /var/log/yunohost-mcp-server
+ProtectHome=false
+
+[Install]
+WantedBy=multi-user.target

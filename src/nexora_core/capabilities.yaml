@@ -1,0 +1,394 @@
+version: 2
+updated_at: "2026-03-23"
+capabilities:
+  # ── Inventory ──────────────────────────────────────────────────────────
+  - id: inventory.observe
+    domain: inventory
+    owner_layer: node
+    status: implemented
+    description: Collecter et exposer l'inventaire local (global ou par section).
+    surfaces:
+      rest:
+        - GET /api/inventory/local
+        - GET /api/inventory/{section}
+        - GET /api/dashboard
+      mcp:
+        - ynh_doc_generate_overview
+        - ynh_doc_services_inventory
+        - ynh_doc_apps_inventory
+        - ynh_doc_domains_inventory
+      console:
+        - dashboard
+        - inventory views
+
+  # ── Fleet ──────────────────────────────────────────────────────────────
+  - id: fleet.enrollment
+    domain: fleet
+    owner_layer: control-plane
+    status: implemented
+    description: Émettre des tokens, attester un nœud et finaliser son inscription.
+    surfaces:
+      rest:
+        - POST /api/fleet/enroll/request
+        - POST /api/fleet/enroll/attest
+        - POST /api/fleet/enroll/register
+      mcp:
+        - ynh_fleet_enrollment_request
+        - ynh_fleet_enrollment_attest
+        - ynh_fleet_enrollment_register
+        - ynh_fleet_register_node
+      console:
+        - fleet enrollment workflows
+    depends_on:
+      - compatibility.policy
+      - node.identity
+
+  - id: fleet.lifecycle
+    domain: fleet
+    owner_layer: control-plane
+    status: implemented
+    description: Piloter drain, cordon, revoke, retire, re-enroll et delete.
+    surfaces:
+      rest:
+        - GET /api/fleet/lifecycle
+        - POST /api/fleet/nodes/{node_id}/drain
+        - POST /api/fleet/nodes/{node_id}/cordon
+        - POST /api/fleet/nodes/{node_id}/uncordon
+        - POST /api/fleet/nodes/{node_id}/revoke
+        - POST /api/fleet/nodes/{node_id}/retire
+        - POST /api/fleet/nodes/{node_id}/rotate-credentials
+        - POST /api/fleet/nodes/{node_id}/re-enroll
+        - POST /api/fleet/nodes/{node_id}/delete
+      mcp:
+        - ynh_fleet_status
+        - ynh_fleet_lifecycle
+        - ynh_fleet_lifecycle_action
+        - ynh_fleet_fetch_remote
+        - ynh_fleet_drift_remote
+      console:
+        - fleet lifecycle views
+
+  # ── Compatibility ──────────────────────────────────────────────────────
+  - id: compatibility.policy
+    domain: compatibility
+    owner_layer: core
+    status: implemented
+    description: Évaluer les versions Nexora/YunoHost par capacité.
+    surfaces:
+      rest:
+        - GET /api/fleet/compatibility
+      mcp:
+        - ynh_fleet_compatibility
+      console:
+        - compatibility indicators
+
+  # ── Governance ─────────────────────────────────────────────────────────
+  - id: governance.scoring
+    domain: governance
+    owner_layer: control-plane
+    status: implemented
+    description: Produire scores, risques et rapport exécutif.
+    surfaces:
+      rest:
+        - GET /api/scores
+        - GET /api/governance/report
+      mcp:
+        - ynh_gov_all_scores
+        - ynh_gov_security_score
+        - ynh_gov_pra_score
+        - ynh_gov_health_score
+        - ynh_gov_compliance_score
+        - ynh_gov_executive_report
+      console:
+        - scores section
+        - governance views
+
+  - id: governance.risks
+    domain: governance
+    owner_layer: control-plane
+    status: implemented
+    description: Registre des risques identifiés et changelog gouvernance.
+    surfaces:
+      rest:
+        - GET /api/governance/risks
+      mcp:
+        - ynh_gov_risk_register
+        - ynh_gov_change_log
+        - ynh_gov_snapshot_diff
+      console: []
+
+  # ── Mode Management ────────────────────────────────────────────────────
+  - id: mode.management
+    domain: modes
+    owner_layer: control-plane
+    status: implemented
+    description: Gestion du mode opérationnel (observer/operator/architect/admin), escalations et confirmations.
+    surfaces:
+      rest:
+        - GET /api/mode
+        - GET /api/mode/list
+        - POST /api/mode/switch
+        - POST /api/mode/escalate
+        - GET /api/mode/escalations
+        - GET /api/mode/confirmations
+        - GET /api/admin/log
+      mcp:
+        - ynh_mode_current
+        - ynh_mode_list
+        - ynh_mode_switch
+        - ynh_mode_escalate
+        - ynh_mode_list_escalations
+        - ynh_mode_pending_confirmations
+        - ynh_mode_history
+      console:
+        - modes section
+        - mode switching UI
+        - escalation management
+
+  # ── Docker ─────────────────────────────────────────────────────────────
+  - id: docker.management
+    domain: docker
+    owner_layer: node
+    status: implemented
+    description: Gestion des conteneurs Docker, templates compose et déploiement.
+    surfaces:
+      rest:
+        - GET /api/docker/status
+        - GET /api/docker/containers
+        - GET /api/docker/templates
+      mcp:
+        - ynh_docker_status
+        - ynh_docker_list_containers
+        - ynh_docker_container_stats
+        - ynh_docker_container_logs
+        - ynh_docker_list_templates
+        - ynh_docker_generate_compose
+        - ynh_docker_deploy_compose
+        - ynh_docker_run
+        - ynh_docker_stop
+        - ynh_docker_start
+        - ynh_docker_remove
+        - ynh_docker_pull
+      console: []
+
+  # ── PRA ────────────────────────────────────────────────────────────────
+  - id: pra.management
+    domain: pra
+    owner_layer: control-plane
+    status: implemented
+    description: Plan de reprise d'activité — score, sauvegardes, runbooks, snapshots.
+    surfaces:
+      rest:
+        - GET /api/pra
+      mcp:
+        - ynh_pra_check_readiness
+        - ynh_pra_export_config
+        - ynh_pra_full_backup
+        - ynh_pra_generate_rebuild_script
+        - ynh_pra_snapshot
+      console:
+        - pra section
+        - pra score and runbooks display
+
+  # ── Security ───────────────────────────────────────────────────────────
+  - id: security.posture
+    domain: security
+    owner_layer: control-plane
+    status: implemented
+    description: Posture sécurité — audit, fail2ban, permissions, ports ouverts.
+    surfaces:
+      rest:
+        - GET /api/security/posture
+      mcp:
+        - ynh_security_audit
+        - ynh_security_check_updates
+        - ynh_security_fail2ban_status
+        - ynh_security_fail2ban_ban
+        - ynh_security_fail2ban_unban
+        - ynh_security_open_ports
+        - ynh_security_permissions_audit
+        - ynh_security_recent_logins
+      console:
+        - security section
+        - security posture display
+
+  # ── Branding ───────────────────────────────────────────────────────────
+  - id: branding.apply
+    domain: branding
+    owner_layer: node
+    status: implemented
+    description: Application de la charte graphique (portail, thème, favicon) sur le nœud et la flotte.
+    surfaces:
+      rest:
+        - GET /api/branding
+        - GET /api/portal/palettes
+        - GET /api/portal/sectors
+      mcp:
+        - ynh_op_apply_branding
+        - ynh_op_sync_branding_to_node
+        - ynh_fleet_sync_branding
+        - ynh_portal_apply_theme
+        - ynh_portal_generate_theme
+        - ynh_portal_generate_sector_theme
+        - ynh_portal_list_palettes
+        - ynh_portal_list_sectors
+      console:
+        - blueprints section (branding preview)
+      node:
+        - POST /branding/apply
+
+  # ── SLA ────────────────────────────────────────────────────────────────
+  - id: sla.tracking
+    domain: sla
+    owner_layer: control-plane
+    status: implemented
+    description: Suivi SLA — tiers, uptime, historique et rapports.
+    surfaces:
+      rest:
+        - GET /api/sla/tiers
+      mcp:
+        - ynh_sla_list_tiers
+        - ynh_sla_compute_uptime
+        - ynh_sla_generate_policy
+        - ynh_sla_history
+        - ynh_sla_record_downtime
+        - ynh_sla_report
+        - ynh_sla_report_from_history
+      console: []
+
+  # ── Notifications ──────────────────────────────────────────────────────
+  - id: notifications.routing
+    domain: notifications
+    owner_layer: control-plane
+    status: implemented
+    description: Templates d'alerte, webhooks, ntfy et configuration de routage.
+    surfaces:
+      rest:
+        - GET /api/notifications/templates
+      mcp:
+        - ynh_notify_list_templates
+        - ynh_notify_preview_alert
+        - ynh_notify_generate_webhook
+        - ynh_notify_generate_config
+        - ynh_notify_send_webhook
+        - ynh_notify_send_ntfy
+      console: []
+
+  # ── Storage ────────────────────────────────────────────────────────────
+  - id: storage.analysis
+    domain: storage
+    owner_layer: node
+    status: implemented
+    description: Analyse de l'espace disque, cartographie YunoHost, politique de stockage.
+    surfaces:
+      rest:
+        - GET /api/storage/usage
+        - GET /api/storage/ynh-map
+      mcp:
+        - ynh_storage_usage
+        - ynh_storage_ynh_map
+        - ynh_storage_top_consumers
+        - ynh_storage_policy
+        - ynh_storage_nfs_config
+        - ynh_storage_s3_backup_config
+      console: []
+
+  # ── Hooks ──────────────────────────────────────────────────────────────
+  - id: hooks.management
+    domain: hooks
+    owner_layer: control-plane
+    status: implemented
+    description: Gestion des événements hook, presets et scripts personnalisés.
+    surfaces:
+      rest:
+        - GET /api/hooks/events
+        - GET /api/hooks/presets
+      mcp:
+        - ynh_hooks_list_events
+        - ynh_hooks_list_presets
+        - ynh_hooks_generate_config
+        - ynh_hooks_generate_script
+        - ynh_hooks_install_preset
+        - ynh_hooks_install_script
+      console: []
+
+  # ── Adoption ───────────────────────────────────────────────────────────
+  - id: adoption.workflow
+    domain: adoption
+    owner_layer: control-plane
+    status: implemented
+    description: Évaluation d'adoption et import d'état existant pour un domaine/chemin.
+    surfaces:
+      rest:
+        - GET /api/adoption/report
+        - POST /api/adoption/import
+      mcp: []
+      console:
+        - adoption section
+        - adoption report and import UI
+
+  # ── Automation ─────────────────────────────────────────────────────────
+  - id: automation.catalog
+    domain: automation
+    owner_layer: core
+    status: implemented
+    description: Exposer les templates et checklists d'automatisation.
+    surfaces:
+      rest:
+        - GET /api/automation/templates
+        - GET /api/automation/checklists
+      mcp:
+        - ynh_auto_list_templates
+        - ynh_auto_list_checklists
+        - ynh_auto_generate_plan
+        - ynh_auto_generate_crontab
+        - ynh_auto_install_crontab
+        - ynh_auto_get_checklist
+      console:
+        - automation section
+
+  # ── Node Actions ───────────────────────────────────────────────────────
+  - id: node.actions
+    domain: node-runtime
+    owner_layer: node
+    status: partial
+    description: Exécuter les actions locales standardisées sur le node-agent.
+    surfaces:
+      rest: []
+      mcp:
+        - ynh_op_apply_branding
+        - ynh_op_create_backup
+        - ynh_op_backup_rotate
+        - ynh_op_renew_cert
+        - ynh_op_restart_service
+      console:
+        - node actions panel
+      node:
+        - POST /branding/apply
+        - POST /permissions/sync
+        - POST /inventory/refresh
+        - POST /pra/snapshot
+        - POST /maintenance/enable
+        - POST /maintenance/disable
+        - POST /docker/compose/apply
+        - POST /healthcheck/run
+    gaps:
+      - real backends now exist for inventory refresh, permissions sync and healthcheck
+      - several remaining endpoints still use placeholder execution backends
+
+  # ── Console UI ─────────────────────────────────────────────────────────
+  - id: console.operator-ui
+    domain: console
+    owner_layer: console
+    status: partial
+    description: Interface opérateur pour flotte, gouvernance, PRA et adoption.
+    surfaces:
+      rest:
+        - GET /api/v1/docs
+        - GET /api/dashboard
+        - GET /api/fleet
+      mcp: []
+      console:
+        - current SPA dashboard
+    gaps:
+      - modular front architecture and reusable components remain to be completed

@@ -1,0 +1,61 @@
+#!/bin/bash
+source _common.sh
+ynh_abort_if_errors
+
+# ---------------------------------------------------------------------------
+# 1. Validate deployment scope coherence
+# ---------------------------------------------------------------------------
+nexora_validate_deployment_scope
+
+# ---------------------------------------------------------------------------
+# 2. Stop running services
+# ---------------------------------------------------------------------------
+nexora_stop_services
+
+# ---------------------------------------------------------------------------
+# 3. Deploy new source
+# ---------------------------------------------------------------------------
+ynh_setup_source --dest_dir="$install_dir"
+nexora_validate_yunohost_version upgrade
+ynh_systemctl --service_name="$app" --action="stop" || true
+nexora_abort_if_port_busy
+
+# ---------------------------------------------------------------------------
+# 4. Configuration — preserve existing, provide defaults
+# ---------------------------------------------------------------------------
+if [ ! -f "$install_dir/config.toml" ]; then
+    install -D -m 0644 ../conf/config.toml "$install_dir/config.toml"
+else
+    ynh_print_info "Existing config.toml preserved. New defaults available in config.toml.example."
+    install -D -m 0644 ../conf/config.toml "$install_dir/config.toml.example"
+fi
+
+# ---------------------------------------------------------------------------
+# 5. State and security — scope-aware
+# ---------------------------------------------------------------------------
+nexora_write_default_state
+
+if nexora_is_operator; then
+    nexora_generate_api_token
+    nexora_setup_operator_role_lock
+fi
+
+nexora_setup_export_dir
+nexora_setup_audit_log
+nexora_install_python_stack
+nexora_fix_runtime_permissions
+
+# ---------------------------------------------------------------------------
+# 6. Systemd and Nginx — scope/profile-aware
+# ---------------------------------------------------------------------------
+nexora_install_systemd_services
+ynh_config_add_nginx
+nexora_render_nginx_conf "/etc/nginx/conf.d/${domain}.d/${app}.conf"
+nginx -t && systemctl reload nginx
+
+# ---------------------------------------------------------------------------
+# 7. Restart services
+# ---------------------------------------------------------------------------
+nexora_restart_services
+
+ynh_print_info "Nexora upgraded (scope=${deployment_scope}, profile=${nexora_profile})."

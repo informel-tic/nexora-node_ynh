@@ -1,0 +1,120 @@
+meta:
+  version: 2
+  source_of_truth: nexora-version-matrix
+  description: Matrice de compatibilité Nexora ↔ YunoHost — rétrocompatible 11.x/12.x et forward-compatible 13.x (Trixie).
+releases:
+  "2.0.0":
+    channel: stable
+    tested_yunohost:
+      - "12.1.2"
+      - "12.1.39"
+    supported_yunohost:
+      - "12.1.0"
+      - "12.1.1"
+      - "12.1.2"
+      - "12.1.39"
+    supported_yunohost_prefixes:
+      - "12.1."
+    experimental_yunohost_prefixes:
+      - "11."
+      - "12."
+      - "13."
+    deprecated_yunohost: []
+    blocked_yunohost: []
+    support_tiers:
+      tested:
+        summary: Production ready — fully validated on this Nexora release.
+      supported:
+        summary: Production supported — any YunoHost 12.x patch level.
+      experimental:
+        summary: Bootstrap allowed with manual review — YunoHost 11.x (retrocompat) and 13.x (Trixie beta).
+      deprecated:
+        summary: Legacy read-only tolerance while migration is planned.
+      blocked:
+        summary: Explicit denylist — no Nexora lifecycle action allowed.
+      unknown:
+        summary: Version not listed in any range or exact list.
+    capabilities:
+      observe:
+        allowed_statuses:
+          - tested
+          - supported
+          - experimental
+          - deprecated
+        exact_minor_required: false
+        manual_review_statuses:
+          - experimental
+          - deprecated
+      inventory:
+        allowed_statuses:
+          - tested
+          - supported
+          - experimental
+          - deprecated
+        exact_minor_required: false
+        manual_review_statuses:
+          - experimental
+          - deprecated
+      diagnosis:
+        allowed_statuses:
+          - tested
+          - supported
+          - experimental
+          - deprecated
+        exact_minor_required: false
+        manual_review_statuses:
+          - experimental
+          - deprecated
+      enroll:
+        allowed_statuses:
+          - tested
+          - supported
+          - experimental
+        exact_minor_required: true
+        manual_review_statuses:
+          - experimental
+      bootstrap:
+        allowed_statuses:
+          - tested
+          - supported
+          - experimental
+        exact_minor_required: true
+        manual_review_statuses:
+          - experimental
+      install_app:
+        allowed_statuses:
+          - tested
+          - supported
+          - experimental
+        exact_minor_required: true
+        manual_review_statuses:
+          - experimental
+      upgrade_app:
+        allowed_statuses:
+          - tested
+          - supported
+          - experimental
+        exact_minor_required: true
+        manual_review_statuses:
+          - experimental
+      deploy_blueprint:
+        allowed_statuses:
+          - tested
+        exact_minor_required: true
+        manual_review_statuses:
+          - supported
+          - experimental
+      fleet_sync:
+        allowed_statuses:
+          - tested
+          - supported
+          - experimental
+        exact_minor_required: true
+        manual_review_statuses:
+          - experimental
+    pinning_policy:
+      strategy: semver_range
+      exact_minor: "12.1"
+      allow_channel: stable
+      fleet_parity_required: false
+      bootstrap_requires_tested_or_supported: false

@@ -1,0 +1,158 @@
+packaging_format = 2
+
+id = "nexora-platform"
+name = "Nexora Platform"
+description.en = "Nexora console, control plane and orchestration layer for YunoHost"
+description.fr = "Console Nexora, plan de contrôle et couche d'orchestration pour YunoHost"
+version = "2.0.0~ynh1"
+maintainers = ["informel-tic"]
+
+[upstream]
+license = "AGPL-3.0-or-later"
+code = "https://github.com/informel-tic/nexora-platform"
+admindoc = "https://github.com/informel-tic/nexora-platform/tree/main/docs"
+
+[integration]
+yunohost = ">= 12.1"
+helpers_version = "2.1"
+render_readme = true
+architectures = "all"
+multi_instance = false
+ldap = "not_relevant"
+sso = "not_relevant"
+disk = "250M"
+ram.build = "400M"
+ram.runtime = "300M"
+
+# ---------------------------------------------------------------------------
+# Installation questions — SaaS / YunoHost separation
+# ---------------------------------------------------------------------------
+
+[install.domain]
+type = "domain"
+
+[install.path]
+type = "path"
+default = "/nexora"
+
+[install.init_main_permission]
+type = "group"
+default = "admins"
+
+# --- Deployment scope: operator (full SaaS) vs subscriber (agent-only) ---
+[install.deployment_scope]
+ask.en = "Deployment scope"
+ask.fr = "Périmètre de déploiement"
+help.en = "Operator: full SaaS platform (control-plane + console). Subscriber: node-agent only, connects to a remote SaaS operator."
+help.fr = "Opérateur : plateforme SaaS complète (control-plane + console). Subscriber : agent uniquement, se connecte à un opérateur SaaS distant."
+type = "select"
+choices.operator = "Operator — Full SaaS platform"
+choices.subscriber = "Subscriber — Node agent only"
+default = "operator"
+
+# --- Installation profile ---
+[install.nexora_profile]
+ask.en = "Installation profile"
+ask.fr = "Profil d'installation"
+help.en = "control-plane: SaaS orchestration only. node-agent-only: remote execution agent. control-plane+node-agent: both on the same machine."
+help.fr = "control-plane : orchestration SaaS uniquement. node-agent-only : agent d'exécution distant. control-plane+node-agent : les deux sur la même machine."
+type = "select"
+choices.control-plane = "Control Plane only"
+choices.node-agent-only = "Node Agent only"
+choices.control-plane+node-agent = "Control Plane + Node Agent"
+default = "control-plane+node-agent"
+
+# --- Deployment mode ---
+[install.deployment_mode]
+ask.en = "Deployment mode"
+ask.fr = "Mode de déploiement"
+help.en = "fresh: clean install on empty server. adopt: non-destructive overlay on existing YunoHost. augment: progressive enhancement of adopted node."
+help.fr = "fresh : installation propre sur serveur vide. adopt : surcouche non destructive sur YunoHost existant. augment : enrichissement progressif d'un nœud adopté."
+type = "select"
+choices.fresh = "Fresh — Clean install"
+choices.adopt = "Adopt — Non-destructive overlay"
+choices.augment = "Augment — Progressive enhancement"
+default = "adopt"
+
+# --- Enrollment mode ---
+[install.enrollment_mode]
+ask.en = "Enrollment mode"
+ask.fr = "Mode d'enrollment"
+help.en = "pull: node fetches its enrollment token from the control-plane. push: operator pushes enrollment to the node."
+help.fr = "pull : le nœud récupère son token d'enrollment depuis le control-plane. push : l'opérateur pousse l'enrollment vers le nœud."
+type = "select"
+choices.pull = "Pull — Node fetches token"
+choices.push = "Push — Operator pushes token"
+default = "pull"
+
+# --- Operator-only mode: hide YunoHost admin layer ---
+[install.hide_yunohost_admin]
+ask.en = "Hide YunoHost admin interface?"
+ask.fr = "Masquer l'interface d'administration YunoHost ?"
+help.en = "When enabled, the YunoHost admin panel (/yunohost/admin) is not proxied through Nexora. Operators manage everything through the Nexora console only. Only applies in operator scope."
+help.fr = "Si activé, le panneau d'administration YunoHost (/yunohost/admin) n'est pas exposé via Nexora. Les opérateurs gèrent tout via la console Nexora uniquement. S'applique uniquement en mode opérateur."
+type = "boolean"
+default = true
+
+# --- SaaS operator URL (subscriber mode only) ---
+[install.saas_operator_url]
+ask.en = "SaaS operator control-plane URL (subscriber only)"
+ask.fr = "URL du control-plane de l'opérateur SaaS (subscriber uniquement)"
+help.en = "The URL of the remote Nexora SaaS control-plane this node-agent will connect to. Only used when deployment_scope=subscriber."
+help.fr = "L'URL du control-plane Nexora SaaS distant auquel cet agent se connectera. Utilisé uniquement quand deployment_scope=subscriber."
+type = "url"
+default = ""
+optional = true
+
+# --- Operator branding ---
+[install.operator_brand_name]
+ask.en = "Platform brand name"
+ask.fr = "Nom de marque de la plateforme"
+help.en = "Custom brand name displayed in the Nexora console and portal."
+help.fr = "Nom de marque personnalisé affiché dans la console et le portail Nexora."
+type = "string"
+default = "Nexora"
+
+# --- Tenant tier (operator mode) ---
+[install.tenant_default_tier]
+ask.en = "Default tenant subscription tier"
+ask.fr = "Niveau d'abonnement par défaut des tenants"
+help.en = "Default subscription tier for new tenants. Controls quotas (nodes, apps, storage)."
+help.fr = "Niveau d'abonnement par défaut pour les nouveaux tenants. Contrôle les quotas (nœuds, apps, stockage)."
+type = "select"
+choices.free = "Free (5 nodes, 10 apps)"
+choices.pro = "Pro (50 nodes, 100 apps)"
+choices.enterprise = "Enterprise (unlimited)"
+default = "free"
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+
+[resources.sources]
+  [resources.sources.main]
+  url = "__LOCAL_SOURCE_URL__"
+  sha256 = "__LOCAL_SOURCE_SHA256__"
+
+[resources.system_user]
+[resources.install_dir]
+[resources.data_dir]
+
+[resources.permissions]
+main.url = "/"
+main.show_tile = false
+main.allowed = "admins"
+
+[resources.ports]
+main.default = 38120
+
+[resources.apt]
+packages = [
+  "python3",
+  "python3-venv",
+  "python3-pip",
+  "curl",
+  "jq",
+  "rsync",
+  "openssl"
+]

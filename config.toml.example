@@ -1,0 +1,25 @@
+# Nexora Platform configuration
+# Copy to config.toml and adjust.
+
+brand_name = "Nexora"
+portal_title = "Nexora Console"
+
+# Deployment mode: fresh | adopt | augment
+mode = "adopt"
+
+# MCP profile: observer | operator | architect | admin
+profile = "observer"
+
+# Allow destructive tools (install, remove, upgrade, restore)
+allow_destructive_tools = false
+
+# Enabled modules (comment out to disable)
+enabled_modules = [
+    "app", "backup", "domain", "user", "system", "pra",
+    "security", "monitoring", "documentation", "packaging",
+    "fleet", "sync", "edge", "portal", "governance",
+    "automation", "blueprints",
+]
+
+# Audit log
+audit_log_path = "/var/log/yunohost-mcp-server/audit.log"

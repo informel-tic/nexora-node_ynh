@@ -1,0 +1,29 @@
+#!/bin/bash
+source _common.sh
+ynh_abort_if_errors
+
+nexora_validate_deployment_scope
+ynh_systemctl --service_name="$app" --action="stop" || true
+nexora_stop_services
+
+ynh_restore_file --origin_path="$install_dir" --dest_path="$install_dir"
+ynh_restore_file --origin_path="$data_dir" --dest_path="$data_dir"
+nexora_validate_yunohost_version restore
+
+if nexora_is_operator; then
+    nexora_generate_api_token
+    nexora_setup_operator_role_lock
+fi
+
+nexora_setup_export_dir
+nexora_setup_audit_log
+nexora_install_python_stack
+nexora_fix_runtime_permissions
+
+nexora_install_systemd_services
+ynh_config_add_nginx
+nexora_render_nginx_conf "/etc/nginx/conf.d/${domain}.d/${app}.conf"
+nginx -t && systemctl reload nginx
+
+nexora_restart_services
+ynh_print_info "Nexora restored (scope=${deployment_scope:-operator}, profile=${nexora_profile:-control-plane+node-agent})."

@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.build/
+*.tar.gz
+.venv/
+venv/
+*.bak
+.DS_Store
+var/state.json
+
+# Test artifacts (local only)
+artifacts/tests/
+.artifacts/tests/
+*.pytest-report.txt
+.github/copilot-instructions.md

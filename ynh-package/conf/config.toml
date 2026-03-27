@@ -1,0 +1,13 @@
+brand_name = "__OPERATOR_BRAND_NAME__"
+portal_title = "__OPERATOR_BRAND_NAME__ Console"
+mode = "__DEPLOYMENT_MODE__"
+profile = "observer"
+allow_destructive_tools = false
+
+[deployment]
+scope = "__DEPLOYMENT_SCOPE__"
+nexora_profile = "__NEXORA_PROFILE__"
+enrollment_mode = "__ENROLLMENT_MODE__"
+hide_yunohost_admin = __HIDE_YUNOHOST_ADMIN__
+saas_operator_url = "__SAAS_OPERATOR_URL__"
+tenant_default_tier = "__TENANT_DEFAULT_TIER__"

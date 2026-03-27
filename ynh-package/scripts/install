@@ -1,0 +1,70 @@
+#!/bin/bash
+source _common.sh
+ynh_abort_if_errors
+
+# ---------------------------------------------------------------------------
+# 1. Validate deployment scope vs profile coherence
+# ---------------------------------------------------------------------------
+nexora_validate_deployment_scope
+
+ynh_setup_source --dest_dir="$install_dir"
+nexora_validate_yunohost_version install
+nexora_abort_if_port_busy
+
+# ---------------------------------------------------------------------------
+# 2. Write configuration with manifest parameters
+# ---------------------------------------------------------------------------
+install -D -m 0644 ../conf/config.toml "$install_dir/config.toml"
+mkdir -p "$data_dir"
+
+# ---------------------------------------------------------------------------
+# 3. Initialize state and security — scope-aware
+# ---------------------------------------------------------------------------
+nexora_write_default_state
+
+if nexora_is_operator; then
+    nexora_generate_api_token
+    nexora_setup_operator_role_lock
+fi
+
+nexora_setup_export_dir
+nexora_setup_audit_log
+
+# ---------------------------------------------------------------------------
+# 4. Install Python stack
+# ---------------------------------------------------------------------------
+nexora_install_python_stack
+nexora_fix_runtime_permissions
+
+# ---------------------------------------------------------------------------
+# 5. Install systemd services — profile-aware
+# ---------------------------------------------------------------------------
+nexora_install_systemd_services
+
+# ---------------------------------------------------------------------------
+# 6. Nginx — render scope-conditional blocks then install
+# ---------------------------------------------------------------------------
+ynh_config_add_nginx
+nexora_render_nginx_conf "/etc/nginx/conf.d/${domain}.d/${app}.conf"
+nginx -t && systemctl reload nginx
+
+# ---------------------------------------------------------------------------
+# 7. Start services
+# ---------------------------------------------------------------------------
+nexora_start_services
+
+# ---------------------------------------------------------------------------
+# 8. Summary
+# ---------------------------------------------------------------------------
+if nexora_is_operator; then
+    ynh_print_info "Nexora SaaS platform installed at https://${domain}${path}."
+    ynh_print_info "Deployment scope: operator | Profile: ${nexora_profile}"
+    ynh_print_info "API token stored in $data_dir/api-token"
+    if [[ "${hide_yunohost_admin}" == "true" || "${hide_yunohost_admin}" == "1" ]]; then
+        ynh_print_info "YunoHost admin interface is hidden — manage via Nexora console only."
+    fi
+else
+    ynh_print_info "Nexora node-agent installed (subscriber mode)."
+    ynh_print_info "Agent will connect to SaaS operator at: ${saas_operator_url}"
+    ynh_print_info "Console and control-plane are NOT installed on this machine."
+fi
