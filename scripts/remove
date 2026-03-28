@@ -1,0 +1,88 @@
+#!/bin/bash
+source _common.sh
+ynh_abort_if_errors
+
+# ---------------------------------------------------------------------------
+# Nexora Node Agent — Subscriber Removal
+# ---------------------------------------------------------------------------
+# Performs overlay rollback → stops agent → cleanup → produces JSON report.
+# Goal: restore the machine to pure YunoHost state.
+# ---------------------------------------------------------------------------
+
+UNINSTALL_MODE="${NEXORA_UNINSTALL_MODE:-preserve}"
+REPORT_PATH="/var/log/nexora-node-uninstall-report.json"
+removed_paths=()
+preserved_paths=("$data_dir")
+
+# 1. Stop agent
+nexora_stop_node_agent
+
+# 2. Full overlay rollback (Docker, cron, nginx snippets, systemd units, guard)
+nexora_full_overlay_rollback
+
+# 3. Remove backup cron
+nexora_remove_backup_cron
+
+# 4. Remove systemd service
+nexora_remove_node_agent_service
+
+# 5. Remove nginx
+ynh_config_remove_nginx
+
+# 6. Purge mode — remove data
+if [ "$UNINSTALL_MODE" = "purge" ]; then
+    removed_paths+=("$install_dir" "$data_dir" "$NEXORA_OVERLAY_DIR")
+    preserved_paths=()
+    rm -rf "$install_dir" "$data_dir" "$NEXORA_OVERLAY_DIR"
+else
+    removed_paths+=("$install_dir")
+    preserved_paths+=("$NEXORA_OVERLAY_DIR")
+    rm -rf "$install_dir"
+fi
+
+# 7. Generate removal report
+python3 - <<'PY' "$REPORT_PATH" "$UNINSTALL_MODE" "${app}" "${removed_paths[*]:-}" "${preserved_paths[*]:-}"
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+report_path = Path(sys.argv[1])
+mode = sys.argv[2]
+app = sys.argv[3]
+removed = [p for p in sys.argv[4].split() if p]
+preserved = [p for p in sys.argv[5].split() if p]
+
+payload = {
+    "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+    "application": app,
+    "scope": "subscriber",
+    "mode": mode,
+    "purge_requested": mode == "purge",
+    "overlay_rollback": True,
+    "removed_paths": removed,
+    "preserved_paths": preserved,
+    "notes": [
+        "Overlay rollback restores the machine to pure YunoHost state.",
+        "Docker is removed only if it was installed by Nexora.",
+        "YunoHost core data is never deleted by this script.",
+        "Use NEXORA_UNINSTALL_MODE=purge to remove all Nexora data.",
+    ],
+}
+report_path.parent.mkdir(parents=True, exist_ok=True)
+report_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+PY
+
+ynh_print_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+ynh_print_info "  Nexora Node Agent removed"
+ynh_print_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+ynh_print_info "  Overlay rollback: DONE"
+ynh_print_info "  Mode: $UNINSTALL_MODE"
+ynh_print_info "  Report: $REPORT_PATH"
+if [ "$UNINSTALL_MODE" = "purge" ]; then
+    ynh_print_info "  All Nexora data has been purged."
+else
+    ynh_print_info "  Data preserved at $data_dir"
+    ynh_print_info "  Set NEXORA_UNINSTALL_MODE=purge to remove everything."
+fi
+ynh_print_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

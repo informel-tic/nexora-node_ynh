@@ -1,0 +1,25 @@
+[Unit]
+Description=Nexora Node Agent (Subscriber)
+After=network.target
+
+[Service]
+Type=simple
+User=__APP__
+WorkingDirectory=__INSTALL_DIR__
+Environment=NEXORA_STATE_PATH=__DATA_DIR__/state.json
+Environment=NEXORA_DEPLOYMENT_SCOPE=subscriber
+Environment=NEXORA_PROFILE=node-agent-only
+Environment=NEXORA_SAAS_OPERATOR_URL=__SAAS_OPERATOR_URL__
+Environment=NEXORA_TENANT_ID=__TENANT_ID__
+Environment=NEXORA_MONITORING_LEVEL=__MONITORING_LEVEL__
+Environment=NEXORA_OVERLAY_DIR=/opt/nexora/overlay
+ExecStart=__INSTALL_DIR__/venv/bin/nexora-node-agent
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=__DATA_DIR__ /opt/nexora/overlay /var/log
+ProtectHome=false
+
+[Install]
+WantedBy=multi-user.target

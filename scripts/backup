@@ -1,0 +1,28 @@
+#!/bin/bash
+source _common.sh
+ynh_abort_if_errors
+
+# ---------------------------------------------------------------------------
+# Nexora Node Agent — Backup
+# ---------------------------------------------------------------------------
+
+nexora_stop_node_agent
+
+ynh_backup "$install_dir"
+ynh_backup "$data_dir"
+
+# Backup overlay manifest if present
+if [ -f "$NEXORA_OVERLAY_MANIFEST" ]; then
+    ynh_backup "$NEXORA_OVERLAY_DIR"
+fi
+
+ynh_backup "/etc/nginx/conf.d/${domain}.d/${app}.conf"
+
+local service_name="${app}-node-agent"
+if [ -f "/etc/systemd/system/${service_name}.service" ]; then
+    ynh_backup "/etc/systemd/system/${service_name}.service"
+fi
+
+nexora_start_node_agent
+
+ynh_print_info "Nexora Node Agent backup completed."

@@ -1,0 +1,137 @@
+packaging_format = 2
+
+id = "nexora-node"
+name = "Nexora Node Agent"
+description.en = "Nexora node agent — enroll your YunoHost into the Nexora SaaS platform with Docker overlay, monitoring, and full rollback support"
+description.fr = "Agent Nexora — enrôlez votre YunoHost dans la plateforme SaaS Nexora avec surcouche Docker, monitoring et rollback complet"
+version = "2.0.0~ynh1"
+maintainers = ["informel-tic"]
+
+[upstream]
+license = "AGPL-3.0-or-later"
+code = "https://github.com/informel-tic/nexora-node"
+admindoc = "https://github.com/informel-tic/nexora-node/tree/main/docs"
+
+[integration]
+yunohost = ">= 12.1"
+helpers_version = "2.1"
+render_readme = true
+architectures = "all"
+multi_instance = false
+ldap = "not_relevant"
+sso = "not_relevant"
+disk = "150M"
+ram.build = "200M"
+ram.runtime = "150M"
+
+# ---------------------------------------------------------------------------
+# Installation questions — Subscriber enrollment wizard
+# ---------------------------------------------------------------------------
+
+[install.domain]
+type = "domain"
+
+[install.path]
+type = "path"
+default = "/nexora-agent"
+
+[install.init_main_permission]
+type = "group"
+default = "admins"
+
+# --- SaaS operator URL (mandatory for subscriber) ---
+[install.saas_operator_url]
+ask.en = "Nexora SaaS control-plane URL"
+ask.fr = "URL du control-plane Nexora SaaS"
+help.en = "The URL of the Nexora SaaS platform this node will connect to. Provided by your Nexora operator."
+help.fr = "L'URL de la plateforme SaaS Nexora à laquelle ce nœud se connectera. Fournie par votre opérateur Nexora."
+type = "url"
+default = ""
+
+# --- Enrollment token ---
+[install.enrollment_token]
+ask.en = "Enrollment token"
+ask.fr = "Token d'enrollment"
+help.en = "One-time enrollment token provided by your Nexora operator. Used to authenticate this node during registration."
+help.fr = "Token d'enrollment à usage unique fourni par votre opérateur Nexora. Utilisé pour authentifier ce nœud lors de l'enregistrement."
+type = "string"
+default = ""
+
+# --- Tenant ID ---
+[install.tenant_id]
+ask.en = "Tenant identifier"
+ask.fr = "Identifiant du tenant"
+help.en = "Your tenant ID in the Nexora SaaS platform. Provided by your operator along with the enrollment token."
+help.fr = "Votre identifiant de tenant dans la plateforme SaaS Nexora. Fourni par votre opérateur avec le token d'enrollment."
+type = "string"
+default = ""
+
+# --- Docker overlay ---
+[install.enable_docker_overlay]
+ask.en = "Enable Docker overlay?"
+ask.fr = "Activer la surcouche Docker ?"
+help.en = "Allow the SaaS operator to deploy Docker-based services on this node (Redis, PostgreSQL, Grafana, etc. from Docker Hub). Docker will be installed by the SaaS control plane after enrollment — NOT during this installation. Docker is fully removed if you uninstall this application."
+help.fr = "Autoriser l'opérateur SaaS à déployer des services Docker sur ce nœud (Redis, PostgreSQL, Grafana, etc. depuis Docker Hub). Docker sera installé par le control plane SaaS après l'enrollment — PAS pendant cette installation. Docker est entièrement supprimé si vous désinstallez cette application."
+type = "boolean"
+default = false
+
+# --- Monitoring level ---
+[install.monitoring_level]
+ask.en = "Monitoring level"
+ask.fr = "Niveau de monitoring"
+help.en = "basic: health checks only. standard: health + security scoring + drift detection. full: all monitoring features including resource tracking."
+help.fr = "basic : vérifications de santé uniquement. standard : santé + scoring sécurité + détection de dérive. full : toutes les fonctionnalités de monitoring y compris le suivi des ressources."
+type = "select"
+choices.basic = "Basic — Health checks only"
+choices.standard = "Standard — Health + Security + Drift"
+choices.full = "Full — All monitoring features"
+default = "standard"
+
+# --- Auto-update Docker containers ---
+[install.auto_update_containers]
+ask.en = "Auto-update Docker containers?"
+ask.fr = "Mise à jour automatique des conteneurs Docker ?"
+help.en = "When enabled, Nexora will deploy Watchtower to automatically update running Docker containers. Only active when Docker overlay is enabled."
+help.fr = "Si activé, Nexora déploiera Watchtower pour mettre à jour automatiquement les conteneurs Docker en cours d'exécution. Actif uniquement quand la surcouche Docker est activée."
+type = "boolean"
+default = true
+
+# --- Automated backups ---
+[install.enable_automated_backups]
+ask.en = "Enable automated PRA backups?"
+ask.fr = "Activer les sauvegardes PRA automatiques ?"
+help.en = "Schedule daily backup snapshots of this node's state. Snapshots are reported to the SaaS control plane for PRA compliance tracking."
+help.fr = "Planifier des snapshots de sauvegarde quotidiens de l'état de ce nœud. Les snapshots sont signalés au control plane SaaS pour le suivi de conformité PRA."
+type = "boolean"
+default = true
+
+# ---------------------------------------------------------------------------
+# Resources
+# ---------------------------------------------------------------------------
+# For custom git install: YunoHost clones the repo and uses the local files.
+# resources.sources.main points to GitHub releases for catalog installs.
+# When installing from git URL, this is overridden by the local checkout.
+
+[resources.sources]
+  [resources.sources.main]
+  url = "https://github.com/informel-tic/nexora-node/archive/refs/tags/v__VERSION__.tar.gz"
+  sha256 = "__SHA256__"
+  in_subdir = true
+  autoupdate.strategy = "latest_github_release"
+  autoupdate.upstream = "https://github.com/informel-tic/nexora-node"
+
+[resources.system_user]
+[resources.install_dir]
+[resources.data_dir]
+
+[resources.ports]
+main.default = 38121
+main.exposed = "TCP"
+
+[resources.permissions]
+main.url = "/"
+main.show_tile = false
+main.allowed = "admins"
+
+[resources.apt]
+packages = ["python3", "python3-venv", "python3-pip", "curl", "jq"]

@@ -1,0 +1,70 @@
+#!/bin/bash
+source _common.sh
+ynh_abort_if_errors
+
+# ---------------------------------------------------------------------------
+# Nexora Node Agent — Subscriber Installation
+# ---------------------------------------------------------------------------
+# This script installs ONLY the node agent (no control-plane, no console).
+# It enrolls the node into a remote Nexora SaaS control-plane.
+# Everything installed is tracked in the overlay manifest for clean rollback.
+# ---------------------------------------------------------------------------
+
+# 1. Validate subscriber scope
+nexora_validate_subscriber_params
+
+ynh_setup_source --dest_dir="$install_dir"
+
+# 2. Write subscriber state
+nexora_write_subscriber_state
+
+# 3. Store enrollment credentials securely
+nexora_store_enrollment_credentials
+
+# 4. Install Python stack
+nexora_install_python_stack
+
+# 5. Fix permissions
+nexora_fix_runtime_permissions
+
+# 6. Install systemd service (node-agent only)
+nexora_install_node_agent_service
+
+# 7. Install Docker overlay if requested
+# NOTE: Docker and overlay features are deployed by the SaaS control plane
+# after enrollment, NOT during install. The node is a passive receiver.
+# The enable_docker_overlay preference is stored in state.json and reported
+# to the SaaS during enrollment so it knows what to deploy.
+
+# 8. Install automated backup cron if requested
+# NOTE: Backup cron is deployed by the SaaS after enrollment.
+# The preference is stored in state.json.
+
+# 9. Configure nginx (minimal: health + enrollment endpoints only)
+ynh_config_add_nginx
+nexora_render_subscriber_nginx "/etc/nginx/conf.d/${domain}.d/${app}.conf"
+nginx -t && systemctl reload nginx
+
+# 10. Start services
+nexora_start_node_agent
+
+# 11. Attempt enrollment
+nexora_attempt_enrollment
+
+# 12. Summary
+ynh_print_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+ynh_print_info "  Nexora Node Agent installed successfully"
+ynh_print_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+ynh_print_info ""
+ynh_print_info "  SaaS operator:    ${saas_operator_url}"
+ynh_print_info "  Tenant:           ${tenant_id}"
+ynh_print_info "  Monitoring:       ${monitoring_level}"
+ynh_print_info "  Docker overlay:   ${enable_docker_overlay}"
+ynh_print_info "  Auto-backups:     ${enable_automated_backups}"
+ynh_print_info ""
+ynh_print_info "  Agent endpoint:   http://127.0.0.1:38121/health"
+ynh_print_info "  Overlay manifest: /opt/nexora/overlay/manifest.json"
+ynh_print_info ""
+ynh_print_info "  To unenroll and restore pure YunoHost state:"
+ynh_print_info "    yunohost app remove ${app}"
+ynh_print_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

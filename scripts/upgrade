@@ -1,0 +1,30 @@
+#!/bin/bash
+source _common.sh
+ynh_abort_if_errors
+
+# ---------------------------------------------------------------------------
+# Nexora Node Agent — Subscriber Upgrade
+# ---------------------------------------------------------------------------
+
+# 1. Stop agent
+nexora_stop_node_agent
+
+# 2. Deploy new sources
+ynh_setup_source --dest_dir="$install_dir" --full_replace
+
+# 3. Upgrade Python stack
+nexora_install_python_stack
+nexora_fix_runtime_permissions
+
+# 4. Re-install systemd unit (may have changed)
+nexora_install_node_agent_service
+
+# 5. Refresh nginx
+ynh_config_add_nginx
+nexora_render_subscriber_nginx "/etc/nginx/conf.d/${domain}.d/${app}.conf"
+nginx -t && systemctl reload nginx
+
+# 6. Restart agent
+nexora_start_node_agent
+
+ynh_print_info "Nexora Node Agent upgraded to $(cat "$install_dir/VERSION" 2>/dev/null || echo 'latest')."

@@ -1,18 +1,18 @@
 [project]
-name = "nexora-node-ynh"
+name = "nexora-node-agent"
 version = "2.0.0"
-description = "Nexora Layer B repository: node agent, YunoHost packaging, trust lifecycle, and local adapters"
+description = "Nexora node agent — enroll your YunoHost into the Nexora SaaS platform with Docker overlay, monitoring, PRA, and full rollback support"
 readme = "README.md"
 license = { text = "AGPL-3.0-or-later" }
 requires-python = ">=3.11"
 authors = [{ name = "informel-tic" }]
-keywords = ["yunohost", "node-agent", "packaging", "trust", "identity", "runtime"]
+keywords = ["yunohost", "nexora", "node-agent", "enrollment", "heartbeat", "docker", "overlay", "rollback"]
 dependencies = [
   "pydantic>=2.0",
   "uvicorn>=0.30.0",
   "fastapi>=0.115.0",
   "pyyaml>=6.0.0",
-  'tomli>=2.0.0; python_version < "3.11"',
+  "httpx>=0.27.0",
 ]
 
 [project.scripts]
@@ -23,9 +23,16 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/nexora_core", "apps/node_agent"]
+packages = ["src/nexora_node_sdk", "apps/node_agent"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
 testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]

@@ -1,0 +1,35 @@
+#!/bin/bash
+source _common.sh
+ynh_abort_if_errors
+
+# ---------------------------------------------------------------------------
+# Nexora Node Agent — Restore
+# ---------------------------------------------------------------------------
+
+ynh_restore "$install_dir"
+ynh_restore "$data_dir"
+
+# Restore overlay directory if it was backed up
+if [ -d "${YNH_CWD}/${NEXORA_OVERLAY_DIR}" ]; then
+    ynh_restore "$NEXORA_OVERLAY_DIR"
+fi
+
+# Restore systemd service
+local service_name="${app}-node-agent"
+if [ -f "${YNH_CWD}/etc/systemd/system/${service_name}.service" ]; then
+    ynh_restore "/etc/systemd/system/${service_name}.service"
+    systemctl daemon-reload
+    systemctl enable "$service_name"
+fi
+
+# Fix permissions
+nexora_fix_runtime_permissions
+
+# Restore nginx
+ynh_restore "/etc/nginx/conf.d/${domain}.d/${app}.conf"
+nginx -t && systemctl reload nginx
+
+# Start agent
+nexora_start_node_agent
+
+ynh_print_info "Nexora Node Agent restored."

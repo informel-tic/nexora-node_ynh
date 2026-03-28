@@ -1,0 +1,29 @@
+[Unit]
+Description=Nexora Node Agent
+After=network-online.target yunohost-api.service
+Wants=network-online.target
+Documentation=https://github.com/nexora/nexora-node
+
+[Service]
+Type=simple
+ExecStart=__AGENT_BIN__
+Environment=NEXORA_ROOT=__NEXORA_ROOT__
+Environment=NEXORA_DEPLOYMENT_SCOPE=subscriber
+Environment=NEXORA_AGENT_PORT=__AGENT_PORT__
+Environment=NEXORA_CONTROL_PLANE_URL=__CONTROL_PLANE_URL__
+WorkingDirectory=__NEXORA_ROOT__
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nexora-node-agent
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=__NEXORA_ROOT__/var __NEXORA_ROOT__/log
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
